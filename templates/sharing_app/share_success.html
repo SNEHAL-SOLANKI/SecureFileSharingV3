@@ -1,0 +1,102 @@
+{% extends "sharing_app/base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-5">
+  <div class="card shadow-lg p-4 text-center border-0" style="border-radius: 16px; max-width: 650px; margin: auto;">
+    
+    <!-- ✅ Success Header -->
+    <div class="mb-4">
+      <i class="fa-solid fa-circle-check text-success" style="font-size: 3rem;"></i>
+      <h3 class="text-success fw-bold mt-2">Temporary Link Generated Successfully</h3>
+    </div>
+
+    <!-- 📄 File Info -->
+    <p class="lead text-muted mb-4">
+      File: <strong class="text-primary">{{ file_name }}</strong><br>
+      This link will expire at 
+      <strong class="text-danger">{{ expiry|date:"M d, Y H:i:s" }}</strong> 
+      (10 minutes from now).
+    </p>
+
+    <!-- 🔗 Share Link & Copy -->
+    <div class="input-group mb-4 mt-3">
+      <input type="text" class="form-control text-center fw-semibold" value="{{ share_url }}" id="shareLink" readonly>
+      <button class="btn btn-outline-primary" type="button" onclick="copyLink()">
+        <i class="fa-solid fa-copy"></i> Copy
+      </button>
+    </div>
+
+    <!-- 🔘 Share Buttons -->
+    <div class="d-flex justify-content-center mb-3 flex-wrap gap-2">
+      <!-- WhatsApp -->
+      <a href="{{ whatsapp_url }}" target="_blank" class="btn btn-success">
+        <i class="fa-brands fa-whatsapp"></i> Share via WhatsApp
+      </a>
+
+      <!-- Telegram -->
+      <a href="https://t.me/share/url?url={{ share_url }}&text=📁%20Secure%20file%20link%20(valid%20for%2010%20minutes)"
+         target="_blank" 
+         class="btn btn-info text-white">
+         <i class="fa-brands fa-telegram"></i> Share via Telegram
+      </a>
+
+      <!-- Email -->
+      <a href="mailto:?subject=Secure File Share&body=Here is your secure file link (valid for 10 minutes): {{ share_url }}"
+         class="btn btn-secondary text-white">
+         <i class="fa-solid fa-envelope"></i> Share via Email
+      </a>
+    </div>
+
+    <!-- 🔙 Back -->
+    <div class="mt-3">
+      <a href="{% url 'sharing:dashboard' %}" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+      </a>
+    </div>
+
+  </div>
+</div>
+
+<!-- ✅ Copy Script -->
+<script>
+function copyLink() {
+  const linkInput = document.getElementById("shareLink");
+  navigator.clipboard.writeText(linkInput.value).then(() => {
+    const originalText = document.activeElement.innerHTML;
+    document.activeElement.innerHTML = "✅ Copied!";
+    setTimeout(() => {
+      document.activeElement.innerHTML = '<i class="fa-solid fa-copy"></i> Copy';
+    }, 2000);
+  }).catch(err => {
+    console.error("Failed to copy link:", err);
+    alert("❌ Unable to copy link automatically. Please copy manually.");
+  });
+}
+</script>
+
+<!-- 🎨 Extra Styling -->
+<style>
+  .card {
+    background: #ffffff;
+    transition: all 0.3s ease-in-out;
+  }
+  .card:hover {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  }
+  .btn {
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+  .input-group input {
+    border-radius: 8px 0 0 8px;
+  }
+  .input-group button {
+    border-radius: 0 8px 8px 0;
+  }
+</style>
+
+{% endblock %}

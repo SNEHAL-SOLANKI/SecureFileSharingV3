@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- 🌟 Home Page -->
+<div class="container text-center py-5" 
+     style="min-height: 80vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+
+  <!-- 🛡️ Logo / Title -->
+  <div class="mb-4">
+    <img src="{% static 'images/drive_logo.png' %}" alt="Secure File Share" 
+         style="width: 90px; height: 90px;">
+  </div>
+
+  <!-- 🏠 Title & Description -->
+  <h1 class="fw-bold mb-3">
+    Welcome to <span style="color: #007bff;">Secure File Share</span>
+  </h1>
+  <p class="lead text-muted mb-4">
+    A secure cloud-based platform to <strong>upload, share, and manage files</strong> safely — 
+    just like Google Drive, but 100% private.
+  </p>
+
+  <!-- 🚪 Buttons -->
+  <div class="mt-3">
+    <a href="{% url 'user_app:login' %}" class="btn btn-primary btn-lg px-4 me-2">
+      <i class="bi bi-box-arrow-in-right me-1"></i> Login
+    </a>
+    <a href="{% url 'user_app:register' %}" class="btn btn-success btn-lg px-4">
+      <i class="bi bi-person-plus me-1"></i> Register
+    </a>
+  </div>
+
+  <!-- ✨ Demo Section -->
+  <div class="mt-5 text-muted">
+    <p>🔐 End-to-End Encryption ensures your files stay private.</p>
+    <p>💾 Access your documents from any device, anytime.</p>
+  </div>
+
+</div>
+
+<!-- 🌈 Extra Styling -->
+<style>
+  body {
+    background: linear-gradient(135deg, #f8f9fa, #eaf4ff);
+  }
+  .btn {
+    border-radius: 30px;
+    transition: all 0.3s ease;
+  }
+  .btn:hover {
+    transform: translateY(-3px);
+  }
+  h1 span {
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.15);
+  }
+</style>
+
+{% endblock %}

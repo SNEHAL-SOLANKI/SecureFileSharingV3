@@ -1,0 +1,26 @@
+/* Admin Panel Custom Theme */
+#header {
+    background-color: #0d4b63 !important;
+    color: #fff !important;
+}
+
+#site-name a {
+    color: #fff !important;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+#content-main {
+    background-color: #f8f9fa !important;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.module h2 {
+    background: #1a657a;
+    color: white;
+}
+
+#content h1 {
+    color: #0d4b63;
+}

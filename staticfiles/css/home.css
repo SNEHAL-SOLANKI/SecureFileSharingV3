@@ -1,0 +1,131 @@
+/* ======================================================
+   🛡️ SECURE FILE SHARING SYSTEM — MAIN STYLESHEET
+   Combines cyber security theme + clean dashboard UI
+====================================================== */
+
+/* ✅ Base Layout */
+body {
+  background: #f8f9fb;
+  font-family: "Segoe UI", Roboto, Arial, sans-serif;
+  color: #222;
+  margin: 0;
+  padding: 0;
+}
+
+/* ✅ Global Links */
+a {
+  text-decoration: none;
+  color: #0d6efd;
+  transition: 0.2s ease;
+}
+a:hover {
+  color: #0056b3;
+}
+
+/* ======================================================
+   🧭 SIDEBAR
+====================================================== */
+.sidebar {
+  background: #fff;
+  border-right: 1px solid #e0e0e0;
+  min-height: 100vh;
+  padding: 1.5rem 1rem;
+}
+.sidebar .nav-link {
+  color: #333;
+  font-weight: 500;
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+.sidebar .nav-link.active,
+.sidebar .nav-link:hover {
+  background: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
+/* ======================================================
+   🧩 CARDS & TABLES
+====================================================== */
+.card {
+  border-radius: 10px;
+  border: 1px solid #ddd;
+}
+.card-header.bg-dark {
+  background: #222 !important;
+  color: #fff !important;
+}
+.card-header.bg-success {
+  background: #198754 !important;
+  color: #fff !important;
+}
+.card-header.bg-primary {
+  background: #0d6efd !important;
+  color: #fff !important;
+}
+
+.table thead th {
+  background: #f8f9fa;
+  font-weight: 600;
+}
+.table tbody tr:hover {
+  background: #f1f1f1;
+}
+
+/* ======================================================
+   ⚡ CYBER SECURITY BRANDING (your theme)
+====================================================== */
+.cyber-theme {
+  background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+  color: #00ffff;
+  font-family: 'Orbitron', sans-serif;
+}
+.glow-text {
+  text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+}
+.btn-cyber {
+  background-color: #00ffff;
+  color: #000;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: bold;
+  transition: 0.3s ease;
+}
+.btn-cyber:hover {
+  background-color: #0ff;
+  transform: scale(1.05);
+}
+
+/* ======================================================
+   🧱 DASHBOARD UTILITIES
+====================================================== */
+.hover-shadow {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  transition: 0.3s ease;
+}
+.hover-shadow:hover {
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  transform: translateY(-3px);
+}
+
+.card-header i {
+  font-size: 1.2rem;
+}
+
+.btn {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* ======================================================
+   📱 RESPONSIVE TWEAKS
+====================================================== */
+@media (max-width: 768px) {
+  .sidebar {
+    min-height: auto;
+  }
+  .card-header h5 {
+    font-size: 1rem;
+  }
+}

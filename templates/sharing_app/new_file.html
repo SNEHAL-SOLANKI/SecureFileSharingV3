@@ -1,0 +1,11 @@
+{% extends "sharing_app/base.html" %}
+{% block content %}
+<div class="container py-4">
+  <h4>New Text File</h4>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary">Create File</button>
+    <a href="{% url 'sharing:dashboard' %}" class="btn btn-link">Cancel</a>
+  </form>
+</div>
+{% endblock %}

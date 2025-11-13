@@ -1,0 +1,98 @@
+{% extends 'sharing_app/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="main-content">
+  <h2>🕒 Recent Files</h2>
+
+  {% if files %}
+  <table class="file-table">
+    <thead>
+      <tr>
+        <th>📄 File Name</th>
+        <th>📅 Uploaded On</th>
+        <th>⚙️ Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in files %}
+      <tr>
+        <td>
+          <i class="fa-regular fa-file"></i> {{ f.name }}
+        </td>
+        <td>{{ f.uploaded_at|date:"d M Y, h:i A" }}</td>
+        <td>
+          <a href="{% url 'sharing:download_private' f.pk %}" 
+             class="btn-table" title="Download">
+            <i class="fa-solid fa-download"></i>
+          </a>
+          <a href="{% url 'sharing:delete' f.pk %}" 
+             class="btn-table delete" 
+             title="Move to Trash" 
+             onclick="return confirm('Are you sure you want to move {{ f.name }} to Trash?');">
+            <i class="fa-solid fa-trash"></i>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="empty-text">📂 No recent files found. Upload something new!</p>
+  {% endif %}
+</div>
+
+<style>
+  .main-content {
+    padding: 30px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin: 20px;
+  }
+
+  .main-content h2 {
+    color: #333;
+    margin-bottom: 20px;
+  }
+
+  .file-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .file-table th, .file-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+  }
+
+  .file-table th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+  }
+
+  .btn-table {
+    color: #007bff;
+    text-decoration: none;
+    margin-right: 8px;
+    font-size: 18px;
+  }
+
+  .btn-table.delete {
+    color: #dc3545;
+  }
+
+  .btn-table:hover {
+    opacity: 0.8;
+  }
+
+  .empty-text {
+    text-align: center;
+    color: #777;
+    font-size: 16px;
+    margin-top: 20px;
+  }
+</style>
+
+{% endblock %}

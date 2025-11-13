@@ -1,0 +1,324 @@
+/* ============================================================
+   📁 drive.css - Secure File Sharing Dashboard Styles
+   ============================================================ */
+
+/* ============================================================
+   🧭 App Layout
+   ============================================================ */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f6fa;
+  font-family: "Segoe UI", Roboto, sans-serif;
+}
+
+/* 🧭 Sidebar Styling */
+.drive-sidebar,
+.left-sidebar {
+  width: 220px;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  border-right: 1px solid #e0e0e0;
+  padding: 20px 15px;
+}
+
+/* ✅ Sidebar Top Area (Logo + Dropdown) */
+.sidebar-top {
+  padding: 18px 16px;
+}
+
+.left-sidebar .brand-link {
+  font-weight: 600;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: #0d6efd;
+  font-size: 18px;
+  text-decoration: none;
+}
+
+.sidebar-new-dropdown {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.sidebar-new-dropdown .btn {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding-left: 10px;
+}
+
+.sidebar-new-dropdown .dropdown-menu {
+  min-width: 160px;
+}
+
+/* Sidebar Links */
+.left-sidebar h2,
+.drive-sidebar h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.left-sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.left-sidebar li {
+  margin: 10px 0;
+}
+
+.left-sidebar a {
+  color: #333;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  display: block;
+  transition: background-color 0.15s ease;
+}
+
+.left-sidebar a:hover,
+.left-sidebar a.active {
+  background-color: #007bff;
+  color: white;
+}
+
+/* ============================================================
+   🖥️ Main Content Area
+   ============================================================ */
+.main-content {
+  flex: 1;
+  padding: 24px 30px;
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  background: none;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+.breadcrumb a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================
+   🗂️ Folder Cards Section
+   ============================================================ */
+.folders {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.folder-card {
+  flex: 0 0 calc(25% - 16px); /* 4 cards per row */
+  box-sizing: border-box;
+  padding: 18px;
+  border-radius: 10px;
+  background: #fff;
+  text-align: center;
+  min-width: 180px;
+  max-width: 300px;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.folder-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+}
+
+.folder-icon {
+  color: #f4b400;
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+/* ============================================================
+   📋 Table & File List
+   ============================================================ */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table th,
+.table td {
+  padding: 12px 15px;
+  vertical-align: middle;
+  border-bottom: 1px solid #eee;
+}
+
+.table th {
+  background-color: #f1f3f5;
+  font-weight: 600;
+  text-align: left;
+}
+
+.table td a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Light Hover Effect */
+.table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* ✂️ Truncate long file names */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 250px;
+}
+
+/* ============================================================
+   ⚙️ Action Buttons (Edit, Delete, Download)
+   ============================================================ */
+table td.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+table td.actions a {
+  margin-right: 10px;
+  text-decoration: none;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #007bff;
+  transition: color 0.15s ease;
+}
+
+table td.actions a:hover {
+  color: #0056b3;
+}
+
+table td.actions i {
+  vertical-align: middle;
+  font-size: 18px;
+}
+
+/* ============================================================
+   📂 Folder / File Icons
+   ============================================================ */
+.folder-icon {
+  color: #f4b400;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.file-icon {
+  color: #4285f4;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* ============================================================
+   📤 Upload Button & Action Buttons
+   ============================================================ */
+.btn-upload {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background-color 0.15s ease;
+}
+
+.btn-upload:hover {
+  background-color: #0056b3;
+}
+
+/* Generic Button */
+.btn {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #b02a37;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #565e64;
+}
+
+/* ============================================================
+   🧱 Responsive Layout
+   ============================================================ */
+@media (max-width: 992px) {
+  .folder-card {
+    flex: 0 0 calc(33.333% - 16px);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .left-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .folder-card {
+    flex: 0 0 calc(50% - 16px);
+  }
+
+  .table td.actions {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .folder-card {
+    flex: 0 0 100%;
+  }
+}

@@ -1,0 +1,212 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Secure File Sharing System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap & Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/drive.css' %}">
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      margin: 0;
+    }
+
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .left-sidebar {
+      width: 240px;
+      background: #fff;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 0 4px rgba(0,0,0,0.05);
+    }
+
+    .sidebar-top {
+      padding: 1rem;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .sidebar-top .brand-link {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #0d6efd;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-new-dropdown {
+      margin-top: 10px;
+    }
+
+    .left-sidebar nav ul {
+      list-style: none;
+      padding: 1rem;
+      margin: 0;
+    }
+
+    .left-sidebar nav ul li {
+      margin-bottom: 0.5rem;
+    }
+
+    .left-sidebar nav ul li a {
+      display: block;
+      padding: 8px 12px;
+      color: #333;
+      border-radius: 6px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .left-sidebar nav ul li a:hover,
+    .left-sidebar nav ul li a.active {
+      background-color: #e9f2ff;
+      color: #0d6efd;
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid #ddd;
+      padding: 1rem;
+      background: #fff;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      padding: 2rem;
+    }
+
+    .main-header h2 {
+      font-weight: 600;
+      color: #0d6efd;
+    }
+
+    /* Dropdown button styling (for sidebar) */
+    .sidebar-new-dropdown .btn {
+      width: 100%;
+      text-align: left;
+    }
+
+    .sidebar-new-dropdown .dropdown-menu {
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- 🧭 LEFT SIDEBAR -->
+    <aside class="left-sidebar">
+      <div class="sidebar-top">
+        <!-- ✅ Brand / Title -->
+        <div class="brand">
+          <a href="{% url 'sharing:dashboard_root' %}" class="brand-link">
+            <i class="bi bi-shield-fill"></i> Secure Drive
+          </a>
+        </div>
+
+        <!-- ✅ New Dropdown (added below brand) -->
+        <div class="sidebar-new-dropdown">
+          <div class="dropdown">
+            <button class="btn btn-sm btn-outline-primary dropdown-toggle w-100" type="button"
+                    id="leftNewDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-plus-lg me-1"></i> New
+            </button>
+            <ul class="dropdown-menu shadow" aria-labelledby="leftNewDropdown">
+              <li>
+                <a class="dropdown-item" href="{% url 'sharing:create_folder' %}">
+                  <i class="bi bi-folder-plus me-2 text-warning"></i> New Folder
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#createFileModal">
+                  <i class="bi bi-file-earmark-text me-2 text-info"></i> New File
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                  <i class="bi bi-cloud-upload me-2 text-success"></i> Upload File
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ✅ Sidebar Navigation -->
+      <nav class="sidebar-nav">
+        <ul>
+          <li>
+            <a href="{% url 'sharing:dashboard_root' %}"
+               class="{% if request.resolver_match.url_name == 'dashboard_root' %}active{% endif %}">
+              <i class="fa-solid fa-house me-2"></i> My Drive
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'sharing:recent_files' %}"
+               class="{% if request.resolver_match.url_name == 'recent_files' %}active{% endif %}">
+              <i class="fa-regular fa-clock me-2"></i> Recent
+            </a>
+          </li>
+          <li>
+            <a href="{% url 'sharing:trash' %}"
+               class="{% if request.resolver_match.url_name == 'trash' %}active{% endif %}">
+              <i class="fa-solid fa-trash-can me-2"></i> Trash
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- ✅ Sidebar Footer -->
+      <div class="sidebar-footer">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 mb-2">
+          <i class="fa-solid fa-house me-1"></i> Home
+        </a>
+        <a href="{% url 'sharing:logout' %}" class="btn btn-danger w-100">
+          <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+        </a>
+      </div>
+    </aside>
+
+    <!-- ✨ MAIN CONTENT AREA -->
+    <main class="main-content">
+      <header class="mb-4 main-header">
+        {% block header %}{% endblock %}
+      </header>
+
+      <!-- ✅ Alert Messages -->
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
+      <!-- ✅ Page Content Block -->
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

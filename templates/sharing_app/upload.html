@@ -1,0 +1,56 @@
+{% extends "sharing_app/base.html" %}
+{% block content %}
+<div class="container py-4">
+
+  <!-- 📂 Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">📤 Upload New File</h4>
+    <a href="{% url 'sharing:dashboard' %}" class="btn btn-outline-secondary btn-sm">
+      ← Back to Dashboard
+    </a>
+  </div>
+
+  <!-- 🧾 Upload Form Card -->
+  <div class="card shadow-sm mx-auto" style="max-width: 720px;">
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- 📁 File Input -->
+        <div class="mb-3">
+          <label for="file" class="form-label fw-semibold">Select File</label>
+          <input type="file" name="file" id="file" class="form-control" required>
+        </div>
+
+        <!-- 📂 Folder Dropdown -->
+        <div class="mb-3">
+          <label for="folder" class="form-label fw-semibold">Upload to Folder</label>
+          <select name="folder_id" id="folder" class="form-select">
+            <option value="">📁 Root (My Drive)</option>
+            {% for f in folders %}
+              <option value="{{ f.id }}">{{ f.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- 📝 Optional Custom File Name -->
+        <div class="mb-3">
+          <label for="custom_name" class="form-label fw-semibold">Custom File Name (optional)</label>
+          <input type="text" name="custom_name" id="custom_name" class="form-control" placeholder="e.g. report_v2.pdf">
+        </div>
+
+        <!-- 🚀 Buttons -->
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-upload"></i> Upload
+          </button>
+          <a href="{% url 'sharing:dashboard' %}" class="btn btn-secondary">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "sharing_app/base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- 🗑️ Trash Page Container -->
+<div class="container-fluid mt-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+        <h2 class="fw-bold text-danger">
+            🗑️ Trash
+        </h2>
+        <a href="{% url 'sharing:dashboard' %}" class="btn btn-outline-secondary">
+            ⬅ Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Trash Table -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Deleted Files</h5>
+            <i class="bi bi-trash-fill"></i>
+        </div>
+
+        <div class="card-body table-responsive">
+            {% if trashed_files %}
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>File Name</th>
+                        <th>Deleted On</th>
+                        <th>Original Folder</th>
+                        <th style="width: 180px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for file in trashed_files %}
+                    <tr>
+                        <td>
+                            <i class="bi bi-file-earmark me-2 text-secondary"></i>
+                            {{ file.name }}
+                        </td>
+                        <td>{{ file.deleted_at|date:"M d, Y h:i A" }}</td>
+                        <td>
+                            {% if file.folder %}
+                                {{ file.folder.name }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- 🔁 Restore -->
+                            <a href="{% url 'sharing:restore_file' file.id %}" 
+                               class="btn btn-sm btn-success"
+                               onclick="return confirm('Restore {{ file.name }} ?');"
+                               title="Restore">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </a>
+
+                            <!-- ❌ Permanent Delete -->
+                            <a href="{% url 'sharing:delete_permanent' file.id %}" 
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Permanently delete {{ file.name }} ? This cannot be undone.');"
+                               title="Delete Permanently">
+                                <i class="bi bi-x-circle"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+                <p class="text-center text-muted mb-0">Your trash is empty 🗑️</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+.card-header i {
+    font-size: 1.3rem;
+}
+</style>
+
+{% endblock %}
