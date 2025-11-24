@@ -1,13 +1,43 @@
 {% extends "sharing_app/base.html" %}
+
 {% block content %}
-<div class="card mx-auto" style="max-width:720px">
-  <div class="card-body">
-    <h4 class="card-title text-danger">Confirm Delete</h4>
-    <p>Are you sure you want to delete <strong>{{ file.name }}</strong>?</p>
-    <form method="post">{% csrf_token %}
-      <button class="btn btn-danger" type="submit">Yes, Delete</button>
-      <a class="btn btn-secondary" href="{% url 'sharing:dashboard' %}">Cancel</a>
-    </form>
+<div class="container mt-4">
+  <div class="card shadow mx-auto" style="max-width:700px;">
+    <div class="card-body">
+
+      <!-- 🔴 Title -->
+      <h3 class="text-danger mb-3">
+        <i class="fa-solid fa-trash-can me-2"></i>
+        Delete Folder: <strong>{{ folder.name }}</strong>
+      </h3>
+
+      <!-- ⚠️ Warning Message -->
+      <p class="text-muted">
+        This action will permanently delete this folder and 
+        <span class="text-danger fw-semibold">all files and all subfolders inside it.</span><br>
+        This cannot be undone.
+      </p>
+
+      <!-- 📝 Delete Confirmation Form -->
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          {{ form.as_p }}
+        </div>
+
+        <button type="submit" class="btn btn-danger">
+          <i class="fa-solid fa-trash me-1"></i>
+          Yes, Delete Permanently
+        </button>
+
+        <!-- 🔙 Cancel and go back -->
+        <a href="{{ request.GET.next|default:'/' }}"
+           class="btn btn-secondary ms-2">
+          Cancel
+        </a>
+      </form>
+
+    </div>
   </div>
 </div>
 {% endblock %}

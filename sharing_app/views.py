@@ -1,5 +1,5 @@
 # ==========================================================
-# 📁 Secure File Sharing - views.py (✅ Final Updated Version)
+# 📁 Secure File Sharing - views.py (Final Updated Version)
 # ==========================================================
 import os
 import uuid
@@ -15,151 +15,365 @@ from django.utils import timezone
 from django.urls import reverse
 
 from .models import SharedFile, Folder, File
+from .forms import RenameFolderForm, FolderPasswordForm, ConfirmDeleteForm, RenameFileForm
+
 
 
 # ==========================================================
 # 🏠 Public Home Page
 # ==========================================================
 def home(request):
-    """Landing (public) home page."""
     return render(request, 'home.html')
 
 
 # ==========================================================
-# 🚪 Logout View
+# 🚪 Logout
 # ==========================================================
 @login_required
 def user_logout(request):
-    """Logs out the user and redirects to login page."""
     logout(request)
     messages.info(request, "👋 You’ve been logged out successfully.")
     return redirect('user:login')
 
 
 # ==========================================================
-# 📊 Dashboard (Root + Folder)
+# 📊 Dashboard (Root + Files) — FINAL UPDATED
 # ==========================================================
 @login_required
 def dashboard(request, folder_id=None):
-    """Main Drive dashboard showing folders and files."""
+    """
+    Default Dashboard (root folder).
+    Folder password protection handled through folder_view().
+    """
     user = request.user
     folder = None
 
+    # If folder_id given → forward to folder_view
     if folder_id:
-        folder = get_object_or_404(Folder, id=folder_id, user=user)
+        return redirect('sharing:folder_view', folder_id=folder_id)
 
-    folders = Folder.objects.filter(user=user, parent=folder).order_by('name')
-    files = File.objects.filter(user=user, folder=folder, is_deleted=False).order_by('-uploaded_at')
+    # Root folders + files
+    folders = Folder.objects.filter(user=user, parent=None).order_by('name')
+    files = File.objects.filter(
+        user=user, folder=None, is_deleted=False
+    ).order_by('-uploaded_at')
 
+    # Add uploader & safe_size for templates
     for f in files:
         uploader = getattr(f, 'user', None)
         f.uploader_name = getattr(uploader, 'username', '—') if uploader else '—'
 
-    context = {
+        try:
+            if f.file and getattr(f.file, 'path', None) and os.path.exists(f.file.path):
+                f.safe_size = f.file.size
+            else:
+                f.safe_size = 0
+        except Exception:
+            f.safe_size = 0
+
+    return render(request, 'sharing_app/dashboard.html', {
         'folders': folders,
         'files': files,
-        'current_folder': folder,
-        'current_folder_id': folder_id,
-        'folder_name': folder.name if folder else "My Drive",
-        'storage_used': None,
+        'current_folder': None,
+        'folder_name': "My Drive",
         'storage_total': '15 GB',
-    }
-    return render(request, 'sharing_app/dashboard.html', context)
+    })
 
 
 # ==========================================================
-# 📁 Folder View (Open inside folder)
+# 📁 Folder View (PASSWORD PROTECTED) — FINAL UPDATED
 # ==========================================================
 @login_required
 def folder_view(request, folder_id):
-    """Open a specific folder & display its contents."""
-    folder = get_object_or_404(Folder, id=folder_id, user=request.user)
-    subfolders = Folder.objects.filter(parent=folder, user=request.user)
-    files = File.objects.filter(folder=folder, user=request.user, is_deleted=False)
+    """
+    Folder handler:
+    - Checks password
+    - Protects subfolder access
+    - Shows dashboard UI
+    """
+    folder = get_object_or_404(Folder, pk=folder_id, user=request.user)
 
-    context = {
+    access_key = f'folder_access_{folder.id}'
+
+    # Folder is secured and not unlocked yet
+    if folder.is_protected and not request.session.get(access_key):
+        if request.method == "POST":
+            pwd = request.POST.get('folder_password', '')
+            if folder.check_password(pwd):
+                request.session[access_key] = True
+                return redirect(request.GET.get("next") or request.path)
+            else:
+                messages.error(request, "❌ Wrong password for this folder!")
+
+        return render(request, 'sharing_app/folder_password_prompt.html', {
+            "folder": folder,
+            "next": request.path
+        })
+
+    # Access granted → load child folders + files
+    subfolders = Folder.objects.filter(
+        parent=folder, user=request.user
+    ).order_by('name')
+
+    files = File.objects.filter(
+        folder=folder, user=request.user, is_deleted=False
+    ).order_by('-uploaded_at')
+
+    # Add uploader + safe_size
+    for f in files:
+        uploader = getattr(f, 'user', None)
+        f.uploader_name = getattr(uploader, 'username', '—') if uploader else '—'
+
+        try:
+            if f.file and getattr(f.file, 'path', None) and os.path.exists(f.file.path):
+                f.safe_size = f.file.size
+            else:
+                f.safe_size = 0
+        except Exception:
+            f.safe_size = 0
+
+    return render(request, 'sharing_app/dashboard.html', {
         'current_folder': folder,
         'folders': subfolders,
         'files': files,
         'folder_name': folder.name,
-    }
-    return render(request, 'sharing_app/dashboard.html', context)
+    })
 
-
+ 
 # ==========================================================
-# 📁 Create Folder
+# 📁 Create Folder (FINAL FIXED VERSION)
 # ==========================================================
 @login_required
 def create_folder(request):
-    """Handles folder creation."""
-    if request.method == "POST":
-        folder_name = request.POST.get("name", "").strip()
-        parent_id = request.POST.get("parent_id")
+    parent_id = request.GET.get("parent") or request.POST.get("parent")
+
+    # FIX: If parent_id is empty → set parent = None
+    if not parent_id:
         parent_folder = None
+    else:
+        parent_folder = get_object_or_404(Folder, id=parent_id, user=request.user)
 
-        if parent_id:
-            parent_folder = Folder.objects.filter(id=parent_id, user=request.user).first()
+    if request.method == "POST":
+        folder_name = request.POST.get("folder_name")
 
-        if not folder_name:
-            messages.error(request, "⚠️ Folder name cannot be empty.")
-        else:
-            exists = Folder.objects.filter(user=request.user, parent=parent_folder, name=folder_name).exists()
-            if exists:
-                messages.warning(request, f"A folder named '{folder_name}' already exists.")
-            else:
-                Folder.objects.create(user=request.user, name=folder_name, parent=parent_folder)
-                messages.success(request, f"📁 Folder '{folder_name}' created successfully!")
-                if parent_folder:
-                    return redirect('sharing:folder_view', folder_id=parent_folder.id)
-                return redirect('sharing:dashboard')
+        new_folder = Folder.objects.create(
+            name=folder_name,
+            parent=parent_folder,
+            user=request.user
+        )
 
-    return render(request, "sharing_app/new_folder.html")
+        messages.success(request, "Folder created successfully!")
+
+        # Go to dashboard inside the same parent
+        if parent_folder:
+            return redirect("sharing:dashboard", folder_id=parent_folder.id)
+        return redirect("sharing:dashboard_root")
+
+    return render(request, "sharing_app/new_folder.html", {
+        "parent_folder": parent_folder
+    })
+
+# ==========================================================
+# ✏️ Rename Folder
+# ==========================================================
+@login_required
+def rename_folder(request, folder_id):
+    folder = get_object_or_404(Folder, pk=folder_id)
+
+    if folder.user != request.user:
+        return HttpResponseForbidden("You are not allowed.")
+
+    if request.method == "POST":
+        form = RenameFolderForm(request.POST)
+        if form.is_valid():
+            folder.name = form.cleaned_data['name']
+            folder.save(update_fields=['name'])
+            messages.success(request, "📁 Folder renamed successfully.")
+            return redirect(request.GET.get('next') or reverse('sharing:dashboard'))
+    else:
+        form = RenameFolderForm(initial={'name': folder.name})
+
+    return render(request, "sharing_app/rename_folder.html", {"form": form, "folder": folder})
 
 
 # ==========================================================
-# 📤 Upload File
+# 🔐 Set / Remove Folder Password
+# ==========================================================
+@login_required
+def set_folder_password(request, folder_id):
+    folder = get_object_or_404(Folder, pk=folder_id)
+
+    if folder.user != request.user:
+        return HttpResponseForbidden("You are not allowed.")
+
+    if request.method == "POST":
+        form = FolderPasswordForm(request.POST)
+        if form.is_valid():
+            pwd = form.cleaned_data['password']
+            folder.set_password(pwd)
+
+            access_key = f'folder_access_{folder.id}'
+            if access_key in request.session:
+                del request.session[access_key]
+
+            messages.success(request, "🔐 Password updated!" if pwd else "🔓 Password removed!")
+            return redirect(request.GET.get('next') or reverse('sharing:dashboard'))
+    else:
+        form = FolderPasswordForm()
+
+    return render(request, "sharing_app/set_folder_password.html", {"form": form, "folder": folder})
+
+
+# ==========================================================
+# 🗑️ Delete Folder
+# ==========================================================
+@login_required
+def delete_folder(request, folder_id):
+    folder = get_object_or_404(Folder, pk=folder_id)
+
+    if folder.user != request.user:
+        return HttpResponseForbidden("You are not allowed.")
+
+    if request.method == "POST":
+        form = ConfirmDeleteForm(request.POST)
+        if form.is_valid() and form.cleaned_data.get('confirm'):
+            folder.delete()
+            messages.success(request, "❌ Folder deleted permanently.")
+            return redirect(reverse('sharing:dashboard'))
+    else:
+        form = ConfirmDeleteForm()
+
+    return render(request, "sharing_app/confirm_delete.html", {"form": form, "folder": folder})
+
+
+
+# ==========================================================
+# ✏️ Rename File — FINAL WORKING VERSION (paste this)
+# ==========================================================
+@login_required
+def rename_file(request, pk):
+    file_obj = get_object_or_404(File, id=pk, user=request.user)
+
+    if request.method == "POST":
+        new_name = request.POST.get("display_name", "").strip()
+
+        if not new_name:
+            messages.error(request, "⚠️ File name cannot be empty.")
+            return redirect(request.path)
+
+        # extract old extension
+        old_ext = os.path.splitext(file_obj.name)[1]
+
+        # if user has not typed extension, keep old
+        if not os.path.splitext(new_name)[1]:
+            new_name = new_name + old_ext
+
+        # prevent duplicates inside same folder
+        if File.objects.filter(
+            user=request.user,
+            folder=file_obj.folder,
+            name=new_name
+        ).exclude(id=file_obj.id).exists():
+            messages.error(request, "⚠️ A file with this name already exists.")
+            return redirect(request.path)
+
+        # UPDATE BOTH FIELDS
+        file_obj.name = new_name
+        file_obj.display_name = new_name
+        file_obj.save()
+
+        messages.success(request, "✅ File renamed successfully!")
+
+        # Redirect properly
+        if file_obj.folder:
+            return redirect("sharing:folder_view", folder_id=file_obj.folder.id)
+        return redirect("sharing:dashboard")
+
+    return render(request, "sharing_app/rename_file.html", {
+        "file": file_obj
+    })
+
+# ==========================================================
+# 📤 Upload File (FINAL — with custom filename + validation)
 # ==========================================================
 @login_required
 def upload_file(request):
-    """Handles file uploads via form and prevents duplicates."""
-    if request.method == 'POST' and request.FILES.get('file'):
-        uploaded = request.FILES['file']
+
+    # GET → Upload form
+    if request.method == 'GET':
+        folders = Folder.objects.filter(user=request.user)
+        return render(request, 'sharing_app/upload.html', {
+            'folders': folders,
+        })
+
+    # POST → Upload file
+    if request.method == 'POST':
+
+        uploaded_file = request.FILES.get('file')
+        display_name = request.POST.get('display_name', '').strip()
         folder_id = request.POST.get('folder_id') or None
-        folder = Folder.objects.filter(id=folder_id, user=request.user).first() if folder_id else None
 
-        existing_names = File.objects.filter(user=request.user, folder=folder).values_list('original_name', flat=True)
-        final_name = uploaded.name
-        base, ext = os.path.splitext(uploaded.name)
-        count = 1
-        while final_name in existing_names:
-            final_name = f"{base}_{count}{ext}"
-            count += 1
+        if not uploaded_file:
+            messages.error(request, "⚠️ Please select a file.")
+            return redirect('sharing:upload')
 
+        # Folder selection
+        folder = None
+        if folder_id:
+            folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+
+        # Extension
+        ext = os.path.splitext(uploaded_file.name)[1]
+
+        # Final name
+        if display_name:
+            if not display_name.endswith(ext):
+                final_name = display_name + ext
+            else:
+                final_name = display_name
+        else:
+            final_name = uploaded_file.name
+
+        # Duplicate check
+        if File.objects.filter(
+            user=request.user,
+            folder=folder,
+            original_name=final_name
+        ).exists():
+            messages.error(request, f"⚠️ File '{final_name}' already exists.")
+            return redirect('sharing:upload')
+
+        # Save
         File.objects.create(
             user=request.user,
-            file=uploaded,
+            file=uploaded_file,
             original_name=final_name,
             folder=folder
         )
+
         messages.success(request, f"✅ File '{final_name}' uploaded successfully!")
 
-        return redirect('sharing:folder_view', folder.id) if folder else redirect('sharing:dashboard')
+        if folder:
+            return redirect('sharing:folder_view', folder_id=folder.id)
 
-    folders = Folder.objects.filter(user=request.user)
-    return render(request, 'sharing_app/upload.html', {'folders': folders})
-
+        return redirect('sharing:dashboard_root')
 
 # ==========================================================
 # 📝 Create Text File
 # ==========================================================
 @login_required
 def create_text_file(request):
-    """Allows user to create a new text file manually."""
     if request.method == "POST":
         filename = request.POST.get("filename", "").strip()
         content = request.POST.get("content", "")
         parent_id = request.POST.get("parent_id")
-        parent_folder = Folder.objects.filter(id=parent_id, user=request.user).first() if parent_id else None
+        parent_folder = Folder.objects.filter(id=parent_id, user=request.user).first()
+
+        if parent_folder and parent_folder.is_protected:
+            key = f'folder_access_{parent_folder.id}'
+            if not request.session.get(key):
+                messages.error(request, "❌ Folder password required.")
+                return redirect('sharing:folder_view', parent_folder.id)
 
         if not filename:
             messages.error(request, "⚠️ File name cannot be empty.")
@@ -175,18 +389,17 @@ def create_text_file(request):
         )
         new_file.file.save(filename, ContentFile(content), save=True)
 
-        messages.success(request, f"📝 Text file '{filename}' created successfully.")
+        messages.success(request, f"📝 Text file '{filename}' created.")
         return redirect('sharing:folder_view', parent_folder.id) if parent_folder else redirect('sharing:dashboard')
 
     return render(request, "sharing_app/create_text.html")
 
 
 # ==========================================================
-# 🗑️ Trash Operations
+# 🗑️ File Delete / Restore / Permanent Delete
 # ==========================================================
 @login_required
 def delete_file(request, pk):
-    """Moves a file to Trash."""
     file_obj = get_object_or_404(File, pk=pk, user=request.user)
     file_obj.is_deleted = True
     file_obj.deleted_at = timezone.now()
@@ -197,7 +410,6 @@ def delete_file(request, pk):
 
 @login_required
 def restore_file(request, pk):
-    """Restores a file from Trash."""
     file_obj = get_object_or_404(File, pk=pk, user=request.user, is_deleted=True)
     file_obj.is_deleted = False
     file_obj.deleted_at = None
@@ -208,7 +420,6 @@ def restore_file(request, pk):
 
 @login_required
 def delete_permanent(request, pk):
-    """Permanently deletes a file."""
     file_obj = get_object_or_404(File, pk=pk, user=request.user, is_deleted=True)
     file_obj.file.delete(save=False)
     file_obj.delete()
@@ -217,44 +428,39 @@ def delete_permanent(request, pk):
 
 
 # ==========================================================
-# ⬇️ File Download / View
+# ⬇️ Download / View Files
 # ==========================================================
 @login_required
 def download_private(request, pk):
-    """Allows the owner to download their private file."""
     file_obj = get_object_or_404(File, pk=pk, user=request.user, is_deleted=False)
     path = file_obj.file.path
+
     if not os.path.exists(path):
         raise Http404("File not found")
 
     mime, _ = mimetypes.guess_type(path)
     with open(path, 'rb') as f:
         response = HttpResponse(f.read(), content_type=mime or 'application/octet-stream')
-        response['Content-Disposition'] = f'attachment; filename="{file_obj.original_name}"'
+        response['Content-Disposition'] = f'attachment; filename="%s"' % file_obj.original_name
         return response
 
 
 @login_required
 def file_view(request, file_id):
-    """Displays or previews the file in browser (owner only)."""
     f = get_object_or_404(File, id=file_id, user=request.user)
-    try:
-        return FileResponse(f.file.open('rb'), as_attachment=False, filename=f.original_name)
-    except Exception:
-        raise Http404("File not found")
+    return FileResponse(f.file.open('rb'), as_attachment=False, filename=f.original_name)
 
 
 # ==========================================================
-# 🔗 Share & Public Access
+# 🔗 Share File - Generate Link
 # ==========================================================
 @login_required
 def share_file(request, pk):
-    """Generates a public share link for a file."""
     file_obj = get_object_or_404(File, pk=pk, user=request.user, is_deleted=False)
     share_key = uuid.uuid4()
 
     shared = SharedFile.objects.create(
-        owner=request.user,  # SharedFile still uses 'owner'
+        owner=request.user,
         file=file_obj.file,
         name=file_obj.original_name,
         share_key=share_key,
@@ -275,8 +481,10 @@ def share_file(request, pk):
     })
 
 
+# ==========================================================
+# 🌐 Public Download
+# ==========================================================
 def download_public(request, share_key):
-    """Allows anyone with the share link to download."""
     shared = get_object_or_404(SharedFile, share_key=share_key)
 
     if shared.shared_expiry and timezone.now() > shared.shared_expiry:
@@ -295,26 +503,21 @@ def download_public(request, share_key):
     mime, _ = mimetypes.guess_type(path)
     with open(path, 'rb') as f:
         response = HttpResponse(f.read(), content_type=mime or 'application/octet-stream')
-        response['Content-Disposition'] = f'attachment; filename="{shared.name}"'
+        response['Content-Disposition'] = f'attachment; filename="%s"' % shared.name
         return response
 
 
 # ==========================================================
-# 🧩 Access Shared File (with token)
+# 🔐 Access shared file by token
 # ==========================================================
 @login_required
 def access_shared_file(request, shared_token):
-    """Access a file via shared token (only owner or permitted user)."""
-    try:
-        shared_file = SharedFile.objects.get(shared_token=shared_token)
-    except SharedFile.DoesNotExist:
-        raise Http404("Shared file not found")
+    shared = get_object_or_404(SharedFile, shared_token=shared_token)
 
-    if request.user != shared_file.owner:
-        return HttpResponseForbidden("🚫 You don't have permission to access this file.")
+    if shared.shared_expiry and timezone.now() > shared.shared_expiry:
+        return HttpResponseForbidden("This shared token has expired.")
 
-    file_obj = shared_file.file
-    return FileResponse(file_obj.open('rb'), as_attachment=False, filename=shared_file.name)
+    return render(request, 'sharing_app/access_shared_file.html', {'shared': shared})
 
 
 # ==========================================================
@@ -322,13 +525,11 @@ def access_shared_file(request, shared_token):
 # ==========================================================
 @login_required
 def recent_files(request):
-    """Displays recently uploaded files."""
     recent = File.objects.filter(user=request.user, is_deleted=False).order_by('-uploaded_at')[:20]
     return render(request, 'sharing_app/recent.html', {'files': recent})
 
 
 @login_required
 def trash(request):
-    """Displays deleted files in Trash."""
     trash_files = File.objects.filter(user=request.user, is_deleted=True).order_by('-deleted_at')
     return render(request, 'sharing_app/trash.html', {'trash_files': trash_files})

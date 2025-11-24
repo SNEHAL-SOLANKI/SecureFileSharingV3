@@ -1,10 +1,75 @@
-{% extends "sharing_app/base.html" %}
+{% extends 'sharing_app/base.html' %}
+
 {% block content %}
-<div class="card" style="max-width:720px">
-  <div class="card-body">
-    <h4>Profile</h4>
-    <p><strong>Username:</strong> {{ user.username }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-  </div>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card shadow-lg p-4 rounded-4">
+                
+                <h2 class="text-center mb-4">
+                    <i class="fa fa-user-circle"></i> Profile
+                </h2>
+
+                <div class="mb-3">
+                    <label class="fw-bold text-secondary">Username:</label>
+                    <div class="p-2 bg-light rounded">{{ user.username }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-bold text-secondary">Email:</label>
+                    <div class="p-2 bg-light rounded">{{ user.email }}</div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button class="btn btn-primary px-4" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        ✏️ Edit Profile
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
 </div>
+
+
+<!-- ======================================================= -->
+<!--       EDIT PROFILE MODAL (Bootstrap Interactive)        -->
+<!-- ======================================================= -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content rounded-4">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" action="">
+                {% csrf_token %}
+
+                <div class="modal-body">
+
+                    <label class="fw-bold">Username</label>
+                    <input type="text" name="username" class="form-control mb-3"
+                           value="{{ user.username }}" required>
+
+                    <label class="fw-bold">Email</label>
+                    <input type="email" name="email" class="form-control"
+                           value="{{ user.email }}" required>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
 {% endblock %}

@@ -96,8 +96,18 @@ def verify_otp_view(request):
 # 🟢 Profile Page (Only for logged-in users)
 @login_required
 def profile(request):
-    return render(request, 'user_app/profile.html')
+    if request.method == "POST":
+        username = request.POST.get("username")
+        email = request.POST.get("email")
 
+        request.user.username = username
+        request.user.email = email
+        request.user.save()
+
+        messages.success(request, "Profile updated successfully!")
+        return redirect('user:profile')
+
+    return render(request, 'user_app/profile.html')
 
 # 🟢 Logout View
 def logout_view(request):

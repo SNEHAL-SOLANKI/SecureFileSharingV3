@@ -8,7 +8,7 @@
     {{ folder_name|default:"My Drive" }}
   </h2>
 
-  <!-- 🔽 New Dropdown -->
+  <!-- New Dropdown -->
   <div class="btn-group">
     <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
       <i class="fa-solid fa-plus"></i> New
@@ -34,178 +34,248 @@
 </div>
 {% endblock %}
 
-
 {% block content %}
 <div class="drive-page container-fluid">
 
-  <!-- 📁 Folders Grid -->
-  <div class="mb-4">
-    <div class="row g-3">
-      {% for folder in folders %}
-      <div class="col-sm-6 col-md-3">
-        <a href="{% url 'sharing:dashboard_folder' folder.id %}" class="text-decoration-none">
-          <div class="folder-card p-3 rounded border bg-white text-center shadow-sm hover-shadow">
-            <i class="fa-solid fa-folder text-warning" style="font-size:36px;"></i>
-            <div class="mt-2 fw-semibold text-truncate">{{ folder.name }}</div>
+  <!-- ================== -->
+  <!-- ⭐ Folders Section -->
+  <!-- ================== -->
+
+<style>
+.folder-card {
+    position: relative;
+    height: 130px;
+    border-radius: 12px;
+    padding: 15px;
+    transition: 0.2s;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+}
+
+.folder-card:hover {
+    background: #f1f3f5;
+    transform: translateY(-2px);
+}
+
+.folder-actions {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    display: none;
+}
+.folder-card:hover .folder-actions { display: block; }
+
+.lock-icon {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    font-size: 18px;
+    color: #d7263d;
+}
+</style>
+
+<div class="mb-4">
+  <div class="row">
+
+    {% for folder in folders %}
+    <div class="col-md-3 mb-4">
+      <div class="folder-card shadow-sm">
+
+        {% if folder.password_hash %}
+          <div class="lock-icon">🔒</div>
+        {% endif %}
+
+        <!-- 3 dot menu -->
+        <div class="folder-actions">
+          <div class="dropdown">
+            <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">⋮</button>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+              <li><a class="dropdown-item"
+                href="{% url 'sharing:rename_folder' folder.id %}?next={{ request.path }}">
+                Rename</a>
+              </li>
+
+              <li><a class="dropdown-item"
+                href="{% url 'sharing:set_folder_password' folder.id %}?next={{ request.path }}">
+                {% if folder.password_hash %}Change / Remove Password{% else %}Set Password{% endif %}
+              </a></li>
+
+              <li><a class="dropdown-item text-danger"
+                href="{% url 'sharing:delete_folder' folder.id %}?next={{ request.path }}">
+                Delete</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <a href="{% url 'sharing:dashboard_folder' folder.id %}"
+           style="text-decoration:none;color:black;">
+          <div class="text-center">
+            <i class="fa-solid fa-folder text-warning" style="font-size:40px;"></i>
+            <h5 class="mt-2 text-truncate">{{ folder.name }}</h5>
           </div>
         </a>
       </div>
-      {% empty %}
-      <div class="col-12 text-muted text-center py-3">
-        No folders yet.
-      </div>
-      {% endfor %}
     </div>
-  </div>
+    {% empty %}
+    <div class="col-12 text-center text-muted py-3">No folders yet.</div>
+    {% endfor %}
 
-
-  <!-- 📄 Files Table -->
-  <div class="card shadow-sm">
-    <div class="card-body p-0">
-      <table class="table mb-0 align-middle">
-        <thead class="table-light">
-          <tr>
-            <th>Name</th>
-            <th>Owner</th>
-            <th>Last Modified</th>
-            <th>Size</th>
-            <th style="width:140px;">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for file in files %}
-          <tr>
-            <td>
-              <i class="fa-regular fa-file-lines me-2 text-secondary"></i>
-              <!-- ✅ Link to file view page -->
-              <a href="{% url 'sharing:file_view' file.id %}" class="text-decoration-none text-dark">
-                {{ file.original_name|default:file.file.name|basename }}
-              </a>
-            </td>
-            <td>{{ file.uploader_name }}</td>
-            <!-- ✅ Show last modified date/time -->
-            <td>{{ file.updated_at|date:"d M Y H:i" }}</td>
-            <td>{{ file.file.size|filesizeformat }}</td>
-            <td class="actions">
-              <a href="{% url 'sharing:download_private' file.id %}" title="Download">
-                <i class="fa-solid fa-download text-secondary"></i>
-              </a>
-              <a href="{% url 'sharing:share_file' file.id %}" title="Share">
-                <i class="fa-solid fa-share-nodes text-success"></i>
-              </a>
-              <a href="{% url 'sharing:delete' file.id %}" title="Delete" onclick="return confirm('Delete this file?')">
-                <i class="fa-solid fa-trash text-danger"></i>
-              </a>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="5" class="text-center text-muted py-4">No files found.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-
-  <!-- ✅ Modals Section -->
-
-  <!-- 📁 New Folder Modal -->
-  <div class="modal fade" id="newFolderModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form method="POST" action="{% url 'sharing:create_folder' %}">
-        {% csrf_token %}
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Create New Folder</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <input type="text" name="folder_name" class="form-control" placeholder="Folder Name" required>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-primary">Create</button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ⬆️ Upload File Modal -->
-  <div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form method="POST" enctype="multipart/form-data" action="{% url 'sharing:upload_file' %}">
-        {% csrf_token %}
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Upload File</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <input type="file" name="file" class="form-control mb-3" required>
-            <select name="folder_id" class="form-select">
-              <option value="">--Select Folder--</option>
-              {% for folder in folders %}
-              <option value="{{ folder.id }}">{{ folder.name }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-success">Upload</button>
-          </div>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- 📝 Create New File Modal -->
-  <div class="modal fade" id="createFileModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form method="POST" action="{% url 'sharing:create_text_file' %}">
-        {% csrf_token %}
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Create New File</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <input type="text" name="filename" class="form-control mb-2" placeholder="File Name" required>
-            <textarea name="content" rows="6" class="form-control" placeholder="File content (optional)"></textarea>
-          </div>
-          <div class="modal-footer">
-            <button type="submit" class="btn btn-info text-white">Create</button>
-          </div>
-        </div>
-      </form>
-    </div>
   </div>
 </div>
 
 
-<!-- 💅 Embedded Styles for Dashboard -->
-<style>
-  /* 🌟 Folder hover animation */
-  .folder-card:hover {
-    background-color: #f8f9fa;
-    transform: translateY(-2px);
-    transition: all 0.2s ease;
-  }
-  .hover-shadow:hover {
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  }
-  table td, table th {
-    vertical-align: middle;
-  }
+<!-- ================== -->
+<!-- 📄 Files Section -->
+<!-- ================== -->
 
-  /* 🎯 Align file action icons properly */
-  table td.actions a {
-    margin-right: 10px;
-    text-decoration: none;
-    font-size: 16px;
-  }
-  table td.actions i {
-    vertical-align: middle;
-  }
-</style>
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+
+    <table class="table mb-0 align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Name</th>
+          <th>Owner</th>
+          <th>Last Modified</th>
+          <th>Size</th>
+          <th style="width:150px;">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        {% for file in files %}
+        <tr>
+          <td>
+            <i class="fa-regular fa-file-lines me-2 text-secondary"></i>
+
+            <!-- ⭐ Show display_name (fallback to original) -->
+            <a href="{% url 'sharing:file_view' file.id %}"
+               class="text-decoration-none text-dark">
+
+              {{ file.display_name|default:file.original_name|default:file.file.name|basename }}
+            </a>
+          </td>
+
+          <td>{{ file.uploader_name }}</td>
+
+          <td>{{ file.updated_at|date:"d M Y H:i" }}</td>
+
+          <td>{{ file.safe_size|filesizeformat }}</td>
+
+          <td>
+
+            <!-- Download -->
+            <a href="{% url 'sharing:download_private' file.id %}" title="Download">
+              <i class="fa-solid fa-download text-secondary"></i>
+            </a>
+
+            <!-- ⭐ Rename Button -->
+            <a href="{% url 'sharing:rename_file' file.id %}" title="Rename">
+              <i class="fa-solid fa-pen-to-square text-primary ms-2"></i>
+            </a>
+
+            <!-- Share -->
+            <a href="{% url 'sharing:share_file' file.id %}" title="Share">
+              <i class="fa-solid fa-share-nodes text-success ms-2"></i>
+            </a>
+
+            <!-- Delete -->
+            <a href="{% url 'sharing:delete' file.id %}"
+               title="Delete"
+               onclick="return confirm('Delete this file?');">
+              <i class="fa-solid fa-trash text-danger ms-2"></i>
+            </a>
+
+          </td>
+        </tr>
+
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center text-muted py-4">No files found.</td>
+        </tr>
+        {% endfor %}
+
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+
+
+<!-- ============= MODALS (same as existing) ============= -->
+
+<!-- New Folder Modal -->
+<div class="modal fade" id="newFolderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{% url 'sharing:create_folder' %}">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create New Folder</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="folder_name" class="form-control" placeholder="Folder Name" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" enctype="multipart/form-data" action="{% url 'sharing:upload_file' %}">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Upload File</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="file" name="file" class="form-control mb-3" required>
+          <select name="folder_id" class="form-select">
+            <option value="">--Select Folder--</option>
+            {% for folder in folders %}
+            <option value="{{ folder.id }}">{{ folder.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Upload</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Create File Modal -->
+<div class="modal fade" id="createFileModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{% url 'sharing:create_text_file' %}">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create New File</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" name="filename" class="form-control mb-2" placeholder="File Name" required>
+          <textarea name="content" rows="6" class="form-control" placeholder="File content (optional)"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-info text-white">Create</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+</div>
 {% endblock %}

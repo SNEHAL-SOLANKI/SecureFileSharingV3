@@ -23,6 +23,44 @@ a:hover {
 }
 
 /* ======================================================
+   🏠 HOME PAGE — HERO SECTION  (⭐ NEW ADDED)
+====================================================== */
+
+.hero {
+  text-align: center;
+  padding: 80px 20px;
+  background: linear-gradient(180deg, #f5f9ff 0%, #eef6ff 100%);
+}
+
+.hero-title {
+  font-size: 38px;
+  font-weight: 700;
+}
+
+.hero-sub {
+  color: #6b7280;
+  margin-bottom: 25px;
+}
+
+.btn-hero {
+  padding: 12px 22px;
+  border-radius: 30px;
+  font-weight: 600;
+  margin: 5px;
+}
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: .5s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ======================================================
    🧭 SIDEBAR
 ====================================================== */
 .sidebar {
@@ -31,6 +69,7 @@ a:hover {
   min-height: 100vh;
   padding: 1.5rem 1rem;
 }
+
 .sidebar .nav-link {
   color: #333;
   font-weight: 500;
@@ -38,6 +77,7 @@ a:hover {
   padding: 8px 12px;
   border-radius: 6px;
 }
+
 .sidebar .nav-link.active,
 .sidebar .nav-link:hover {
   background: rgba(13, 110, 253, 0.1);
@@ -51,14 +91,17 @@ a:hover {
   border-radius: 10px;
   border: 1px solid #ddd;
 }
+
 .card-header.bg-dark {
   background: #222 !important;
   color: #fff !important;
 }
+
 .card-header.bg-success {
   background: #198754 !important;
   color: #fff !important;
 }
+
 .card-header.bg-primary {
   background: #0d6efd !important;
   color: #fff !important;
@@ -68,6 +111,7 @@ a:hover {
   background: #f8f9fa;
   font-weight: 600;
 }
+
 .table tbody tr:hover {
   background: #f1f1f1;
 }
@@ -80,9 +124,11 @@ a:hover {
   color: #00ffff;
   font-family: 'Orbitron', sans-serif;
 }
+
 .glow-text {
   text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
 }
+
 .btn-cyber {
   background-color: #00ffff;
   color: #000;
@@ -92,6 +138,7 @@ a:hover {
   font-weight: bold;
   transition: 0.3s ease;
 }
+
 .btn-cyber:hover {
   background-color: #0ff;
   transform: scale(1.05);
@@ -100,6 +147,7 @@ a:hover {
 /* ======================================================
    🧱 DASHBOARD UTILITIES
 ====================================================== */
+
 .hover-shadow {
   box-shadow: 0 4px 10px rgba(0,0,0,0.05);
   transition: 0.3s ease;
@@ -127,5 +175,9 @@ a:hover {
   }
   .card-header h5 {
     font-size: 1rem;
+  }
+
+  .hero-title {
+    font-size: 30px;
   }
 }

@@ -1,0 +1,27 @@
+{% extends 'sharing_app/base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <h3 class="mb-3">Rename File</h3>
+
+        <p><strong>Current Name:</strong> {{ file.name }}</p>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <label>New File Name:</label>
+            <input 
+                type="text" 
+                name="display_name" 
+                value="{{ file.display_name|default:file.name }}" 
+                class="form-control"
+                required
+            >
+
+            <button class="btn btn-primary mt-3">Rename</button>
+            <a href="{% url 'sharing:dashboard' %}" class="btn btn-secondary mt-3">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

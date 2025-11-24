@@ -6,62 +6,74 @@ app_name = 'sharing'
 urlpatterns = [
 
     # =====================================================
-    # 🏠 DASHBOARD (Root + Folder Views)
+    # 🏠 DASHBOARD
     # =====================================================
-    path('', views.dashboard, name='dashboard'),                                     # Default root
-    path('dashboard/', views.dashboard, name='dashboard_root'),                      # /sharing/dashboard/
-    path('dashboard/<int:folder_id>/', views.dashboard, name='dashboard_folder'),    # /sharing/dashboard/1/
+    path('', views.dashboard, name='dashboard'),
+    path('dashboard/', views.dashboard, name='dashboard_root'),
+
+    # =====================================================
+    # 📁 FOLDER VIEWS
+    # =====================================================
+    path('folder/<int:folder_id>/', views.folder_view, name='folder_view'),
+    path('dashboard/<int:folder_id>/', views.folder_view, name='dashboard_folder'),
 
     # =====================================================
     # 📁 FOLDER MANAGEMENT
     # =====================================================
-    path('create-folder/', views.create_folder, name='create_folder'),               # Create new folder
-    path('new-folder/', views.create_folder, name='new_folder'),                     # Alias for UI/Sidebar
-    path('folder/<int:folder_id>/', views.folder_view, name='folder_view'),          # Open specific folder
+    path('create-folder/', views.create_folder, name='create_folder'),
+    path('new-folder/', views.create_folder, name='new_folder'),
+
+    # ⭐ RENAME / PASSWORD / DELETE FOLDER
+    path('folder/<int:folder_id>/rename/', views.rename_folder, name='rename_folder'),
+    path('folder/<int:folder_id>/password/', views.set_folder_password, name='set_folder_password'),
+    path('folder/<int:folder_id>/delete/', views.delete_folder, name='delete_folder'),
 
     # =====================================================
     # ⬆️ FILE UPLOAD & CREATION
     # =====================================================
-    path('upload/', views.upload_file, name='upload_file'),                          # Upload file to folder
-    path('new-file/', views.create_text_file, name='new_file'),                      # Alias (for UI/Sidebar)
-    path('create-text-file/', views.create_text_file, name='create_text_file'),      # Manual text file creation
+    path('upload/', views.upload_file, name='upload_file'),
+    path('new-file/', views.create_text_file, name='new_file'),
+    path('create-text-file/', views.create_text_file, name='create_text_file'),
+    
 
     # =====================================================
-    # 📄 FILE VIEW / DETAILS
+    # ✏️ FILE RENAME (NEW URL)
     # =====================================================
-    path('file/<int:file_id>/', views.file_view, name='file_view'),                  # View file details or preview
+    path("file/<int:pk>/rename/", views.rename_file, name="rename_file"),
+      
 
     # =====================================================
-    # 🔗 FILE SHARING (Private/Public)
+    # 📄 FILE VIEW
     # =====================================================
-    path('share/<int:pk>/', views.share_file, name='share_file'),                    # Generate & view share link
+    path('file/<int:file_id>/', views.file_view, name='file_view'),
 
     # =====================================================
-    # 🗑️ FILE ACTIONS (Delete / Restore / Permanent Delete)
+    # 🔗 SHARING
     # =====================================================
-    path('delete/<int:pk>/', views.delete_file, name='delete'),                      # Move file to trash
-    path('restore/<int:pk>/', views.restore_file, name='restore_file'),              # Restore from trash
-    path('delete-permanent/<int:pk>/', views.delete_permanent, name='delete_permanent'),  # Permanent delete
+    path('share/<int:pk>/', views.share_file, name='share_file'),
 
     # =====================================================
-    # ⬇️ FILE DOWNLOAD (Private + Public)
+    # 🗑️ FILE ACTIONS
     # =====================================================
-    path('download/private/<int:pk>/', views.download_private, name='download_private'),   # Owner-only download
-    path('download/public/<uuid:share_key>/', views.download_public, name='download_public'),  # Via public link
+    path('delete/<int:pk>/', views.delete_file, name='delete'),
+    path('restore/<int:pk>/', views.restore_file, name='restore_file'),
+    path('delete-permanent/<int:pk>/', views.delete_permanent, name='delete_permanent'),
 
     # =====================================================
-    # 🕒 RECENT & TRASH VIEWS
+    # ⬇️ DOWNLOAD
     # =====================================================
-    path('recent/', views.recent_files, name='recent_files'),                        # Recently uploaded files
-    path('trash/', views.trash, name='trash'),                                       # Deleted files view
+    path('download/private/<int:pk>/', views.download_private, name='download_private'),
+    path('download/public/<uuid:share_key>/', views.download_public, name='download_public'),
 
     # =====================================================
-    # 🚪 AUTH / LOGOUT
+    # 🕒 RECENT & TRASH
     # =====================================================
-    path('logout/', views.user_logout, name='logout'),                               # Logout user session
+    path('recent/', views.recent_files, name='recent_files'),
+    path('trash/', views.trash, name='trash'),
 
     # =====================================================
-    # 🔗 TOKEN-BASED ACCESS (Temporary Share Links)
+    # 🚪 LOGOUT
     # =====================================================
-    path('access/<str:shared_token>/', views.access_shared_file, name='access_shared_file'),  # Temp share access
+    path('logout/', views.user_logout, name='logout'),
+
 ]

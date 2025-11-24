@@ -6,6 +6,13 @@
   <title>Secure File Sharing System</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <!-- ✅ Favicon Added -->
+  <link rel="icon" href="{% static 'icons/logo.png' %}">
+  <link rel="stylesheet" href="{% static 'css/home.css' %}">
+  <script src="{% static 'main.js' %}"></script>
+
+
+
   <!-- Bootstrap & Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/drive.css' %}">
@@ -41,6 +48,7 @@
       border-bottom: 1px solid #ddd;
     }
 
+    /* ⭐ UPDATED BRAND WITH LOGO */
     .sidebar-top .brand-link {
       font-size: 1.2rem;
       font-weight: 600;
@@ -49,6 +57,12 @@
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+
+    .sidebar-top .brand-logo {
+      height: 34px;
+      width: 34px;
+      object-fit: contain;
     }
 
     .sidebar-new-dropdown {
@@ -97,7 +111,6 @@
       color: #0d6efd;
     }
 
-    /* Dropdown button styling (for sidebar) */
     .sidebar-new-dropdown .btn {
       width: 100%;
       text-align: left;
@@ -114,14 +127,16 @@
     <!-- 🧭 LEFT SIDEBAR -->
     <aside class="left-sidebar">
       <div class="sidebar-top">
-        <!-- ✅ Brand / Title -->
+
+        <!-- ⭐ UPDATED BRAND WITH LOGO -->
         <div class="brand">
           <a href="{% url 'sharing:dashboard_root' %}" class="brand-link">
-            <i class="bi bi-shield-fill"></i> Secure Drive
+            <img src="{% static 'icons/logo.png' %}" class="brand-logo" alt="Logo">
+            Secure Drive
           </a>
         </div>
 
-        <!-- ✅ New Dropdown (added below brand) -->
+        <!-- New Dropdown -->
         <div class="sidebar-new-dropdown">
           <div class="dropdown">
             <button class="btn btn-sm btn-outline-primary dropdown-toggle w-100" type="button"
@@ -149,7 +164,7 @@
         </div>
       </div>
 
-      <!-- ✅ Sidebar Navigation -->
+      <!-- Sidebar Navigation -->
       <nav class="sidebar-nav">
         <ul>
           <li>
@@ -173,7 +188,7 @@
         </ul>
       </nav>
 
-      <!-- ✅ Sidebar Footer -->
+      <!-- Sidebar Footer -->
       <div class="sidebar-footer">
         <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 mb-2">
           <i class="fa-solid fa-house me-1"></i> Home
@@ -184,13 +199,12 @@
       </div>
     </aside>
 
-    <!-- ✨ MAIN CONTENT AREA -->
+    <!-- MAIN CONTENT AREA -->
     <main class="main-content">
       <header class="mb-4 main-header">
         {% block header %}{% endblock %}
       </header>
 
-      <!-- ✅ Alert Messages -->
       {% if messages %}
         {% for message in messages %}
           <div class="alert alert-info alert-dismissible fade show" role="alert">
@@ -200,7 +214,6 @@
         {% endfor %}
       {% endif %}
 
-      <!-- ✅ Page Content Block -->
       {% block content %}{% endblock %}
     </main>
   </div>

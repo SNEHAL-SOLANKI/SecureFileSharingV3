@@ -5,17 +5,18 @@
     <div class="card-body">
       <h4 class="card-title mb-4">📁 Create New Folder</h4>
 
-      <form method="post" action="{% url 'sharing:new_folder' %}" novalidate>
+      <form method="POST" action="{% url 'sharing:new_folder' %}">
         {% csrf_token %}
+
+        <!-- Hidden parent folder ID -->
+        <input type="hidden" name="parent" value="{{ parent_folder.id|default:'' }}">
 
         <!-- Folder Name Input -->
         <div class="mb-3">
-          <label for="folderName" class="form-label">Folder Name</label>
-          <input type="text" id="folderName" name="name" class="form-control" placeholder="Enter folder name" required>
+          <label for="folder_name" class="form-label">Folder Name</label>
+          <input type="text" id="folder_name" name="folder_name"
+                 class="form-control" placeholder="Enter folder name" required>
         </div>
-
-        <!-- Hidden parent_id (for nested folders, optional) -->
-        <input type="hidden" name="parent_id" value="{{ current_folder.id|default:'' }}">
 
         <!-- Buttons -->
         <div class="d-flex gap-2">
@@ -26,6 +27,7 @@
             <i class="bi bi-arrow-left"></i> Cancel
           </a>
         </div>
+
       </form>
     </div>
   </div>

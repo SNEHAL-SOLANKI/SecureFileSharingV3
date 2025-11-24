@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<!-- 🌟 NEW HERO SECTION (Step 6 Applied) -->
+<div class="hero">
+
+    <img src="{% static 'icons/logo.png' %}" 
+         style="height:85px; width:85px;" 
+         class="fade-in">
+
+    <h1 class="hero-title fade-in">
+        Welcome to <span style="color:#0d6efd;">Secure File Share</span>
+    </h1>
+
+    <p class="hero-sub fade-in">
+        Upload, share, and manage your files securely — 100% private.
+    </p>
+
+    <div class="fade-in">
+        <a href="{% url 'user_app:login' %}" class="btn btn-primary btn-hero">
+            Login
+        </a>
+        <a href="{% url 'user_app:register' %}" class="btn btn-success btn-hero">
+            Register
+        </a>
+    </div>
+</div>
+
+{% endblock %}
