@@ -23,9 +23,38 @@ from django.conf import settings
 from .models import SharedFile, Folder, File
 from .forms import RenameFolderForm, FolderPasswordForm, ConfirmDeleteForm, RenameFileForm
 
+# ---------------------------
+# Safe ClamAV scan function
+# ---------------------------
+try:
+    import clamd
+except ModuleNotFoundError:
+    clamd = None
+    print("⚠️ clamd module not installed. Virus scanning disabled.")
+
+
 def scan_file_with_clamav(path):
-    result = subprocess.run(["clamscan", path], capture_output=True, text=True)
-    return "Infected files:" not in result.stdout
+    """
+    Scans a file for viruses using ClamAV.
+    Returns True if file is clean or scanning is disabled, False if infected.
+    """
+    if clamd is None:
+        print(f"⚠️ Skipping virus scan for {path}.")
+        return True  # Allow in development/testing
+
+    try:
+        cd = clamd.ClamdNetworkSocket()  
+        result = cd.scan(path)
+        # result example: {'filepath': ('OK', None)} or {'filepath': ('FOUND', 'EICAR-Test-Signature')}
+        for res in result.values():
+            if res[0] == 'FOUND':
+                print(f"❌ Virus detected in file: {path}")
+                return False  # infected
+        print(f"✅ File is clean: {path}")
+        return True  # clean
+    except Exception as e:
+        print(f"⚠️ ClamAV scan failed for {path}: {e}")
+        return False
 
 
 
