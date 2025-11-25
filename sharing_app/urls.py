@@ -34,13 +34,11 @@ urlpatterns = [
     path('upload/', views.upload_file, name='upload_file'),
     path('new-file/', views.create_text_file, name='new_file'),
     path('create-text-file/', views.create_text_file, name='create_text_file'),
-    
 
     # =====================================================
-    # ✏️ FILE RENAME (NEW URL)
+    # ✏️ FILE RENAME
     # =====================================================
     path("file/<int:pk>/rename/", views.rename_file, name="rename_file"),
-      
 
     # =====================================================
     # 📄 FILE VIEW
@@ -53,11 +51,18 @@ urlpatterns = [
     path('share/<int:pk>/', views.share_file, name='share_file'),
 
     # =====================================================
-    # 🗑️ FILE ACTIONS
+    # 🗑️ FILE ACTIONS (TRASH SYSTEM)
     # =====================================================
-    path('delete/<int:pk>/', views.delete_file, name='delete'),
-    path('restore/<int:pk>/', views.restore_file, name='restore_file'),
-    path('delete-permanent/<int:pk>/', views.delete_permanent, name='delete_permanent'),
+   path("move-to-trash/<int:file_id>/", views.move_to_trash, name="move_to_trash"),
+
+
+    path("trash/", views.trash_view, name="trash"),
+    path("restore/<int:file_id>/", views.restore_file, name="restore"),
+    path("permanent/<int:file_id>/", views.permanent_delete, name="permanent_delete"),
+
+
+    # (OLD DELETE ROUTES REMOVED)
+    # path('delete/<int:pk>/', views.delete_file, name='delete'),
 
     # =====================================================
     # ⬇️ DOWNLOAD
@@ -69,7 +74,6 @@ urlpatterns = [
     # 🕒 RECENT & TRASH
     # =====================================================
     path('recent/', views.recent_files, name='recent_files'),
-    path('trash/', views.trash, name='trash'),
 
     # =====================================================
     # 🚪 LOGOUT

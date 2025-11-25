@@ -40,7 +40,9 @@
                             <i class="bi bi-file-earmark me-2 text-secondary"></i>
                             {{ file.name }}
                         </td>
+
                         <td>{{ file.deleted_at|date:"M d, Y h:i A" }}</td>
+
                         <td>
                             {% if file.folder %}
                                 {{ file.folder.name }}
@@ -48,9 +50,10 @@
                                 <span class="text-muted">—</span>
                             {% endif %}
                         </td>
+
                         <td>
                             <!-- 🔁 Restore -->
-                            <a href="{% url 'sharing:restore_file' file.id %}" 
+                            <a href="{% url 'sharing:restore' file.id %}" 
                                class="btn btn-sm btn-success"
                                onclick="return confirm('Restore {{ file.name }} ?');"
                                title="Restore">
@@ -58,7 +61,7 @@
                             </a>
 
                             <!-- ❌ Permanent Delete -->
-                            <a href="{% url 'sharing:delete_permanent' file.id %}" 
+                            <a href="{% url 'sharing:permanent_delete' file.id %}" 
                                class="btn btn-sm btn-danger"
                                onclick="return confirm('Permanently delete {{ file.name }} ? This cannot be undone.');"
                                title="Delete Permanently">
@@ -69,6 +72,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+
             {% else %}
                 <p class="text-center text-muted mb-0">Your trash is empty 🗑️</p>
             {% endif %}

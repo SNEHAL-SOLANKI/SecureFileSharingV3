@@ -2,6 +2,7 @@
 # 📁 Secure File Sharing - views.py (Final Updated Version)
 # ==========================================================
 import os
+import subprocess
 import uuid
 import mimetypes
 from datetime import timedelta
@@ -13,9 +14,18 @@ from django.http import HttpResponse, Http404, HttpResponseForbidden, FileRespon
 from django.contrib import messages
 from django.utils import timezone
 from django.urls import reverse
+import clamd
+
+from django.shortcuts import redirect, get_object_or_404
+from .models import UploadedFile
+from django.conf import settings
 
 from .models import SharedFile, Folder, File
 from .forms import RenameFolderForm, FolderPasswordForm, ConfirmDeleteForm, RenameFileForm
+
+def scan_file_with_clamav(path):
+    result = subprocess.run(["clamscan", path], capture_output=True, text=True)
+    return "Infected files:" not in result.stdout
 
 
 
@@ -293,71 +303,54 @@ def rename_file(request, pk):
         "file": file_obj
     })
 
+
 # ==========================================================
-# 📤 Upload File (FINAL — with custom filename + validation)
+# 📤 Upload File (FINAL — with ClamAV virus scan)
 # ==========================================================
 @login_required
+@login_required
 def upload_file(request):
-
-    # GET → Upload form
     if request.method == 'GET':
         folders = Folder.objects.filter(user=request.user)
-        return render(request, 'sharing_app/upload.html', {
-            'folders': folders,
-        })
+        return render(request, 'sharing_app/upload.html', {'folders': folders})
 
-    # POST → Upload file
-    if request.method == 'POST':
+    uploaded_file = request.FILES.get('file')
+    display_name = request.POST.get('display_name', '').strip()
+    folder_id = request.POST.get('folder_id') or None
 
-        uploaded_file = request.FILES.get('file')
-        display_name = request.POST.get('display_name', '').strip()
-        folder_id = request.POST.get('folder_id') or None
+    if not uploaded_file:
+        messages.error(request, "⚠️ Please select a file.")
+        return redirect('sharing:upload')
 
-        if not uploaded_file:
-            messages.error(request, "⚠️ Please select a file.")
+    folder = None
+    if folder_id:
+        folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+
+    ext = os.path.splitext(uploaded_file.name)[1]
+    final_name = display_name + ext if display_name else uploaded_file.name
+
+    # Duplicate check
+    if File.objects.filter(user=request.user, folder=folder, original_name=final_name).exists():
+        messages.error(request, f"⚠️ File '{final_name}' already exists.")
+        return redirect('sharing:upload')
+
+    # ====== Virus Scan using clamd ======
+    try:
+        cd = clamd.ClamdNetworkSocket('127.0.0.1', 3310)
+        # Scan the uploaded file directly (in memory)
+        result = cd.instream(uploaded_file.file)
+        if any('FOUND' in res for res in result.values()):
+            messages.error(request, "⚠️ Virus detected! File upload blocked.")
             return redirect('sharing:upload')
+    except Exception as e:
+        messages.warning(request, f"⚠️ Virus scan unavailable: {e}. Uploading without scan.")
 
-        # Folder selection
-        folder = None
-        if folder_id:
-            folder = get_object_or_404(Folder, id=folder_id, user=request.user)
+    # Save file
+    f = File.objects.create(user=request.user, original_name=final_name, folder=folder)
+    f.file.save(final_name, uploaded_file, save=True)
 
-        # Extension
-        ext = os.path.splitext(uploaded_file.name)[1]
-
-        # Final name
-        if display_name:
-            if not display_name.endswith(ext):
-                final_name = display_name + ext
-            else:
-                final_name = display_name
-        else:
-            final_name = uploaded_file.name
-
-        # Duplicate check
-        if File.objects.filter(
-            user=request.user,
-            folder=folder,
-            original_name=final_name
-        ).exists():
-            messages.error(request, f"⚠️ File '{final_name}' already exists.")
-            return redirect('sharing:upload')
-
-        # Save
-        File.objects.create(
-            user=request.user,
-            file=uploaded_file,
-            original_name=final_name,
-            folder=folder
-        )
-
-        messages.success(request, f"✅ File '{final_name}' uploaded successfully!")
-
-        if folder:
-            return redirect('sharing:folder_view', folder_id=folder.id)
-
-        return redirect('sharing:dashboard_root')
-
+    messages.success(request, f"✅ File '{final_name}' uploaded successfully!")
+    return redirect('sharing:folder_view', folder_id=folder.id) if folder else redirect('sharing:dashboard_root')
 # ==========================================================
 # 📝 Create Text File
 # ==========================================================
@@ -396,36 +389,64 @@ def create_text_file(request):
 
 
 # ==========================================================
-# 🗑️ File Delete / Restore / Permanent Delete
+# 🗑️ File Delete / Restore / Permanent Delete (FINAL)
 # ==========================================================
+# ================================
+# 🗑 Move file to Trash
+# ================================
 @login_required
-def delete_file(request, pk):
-    file_obj = get_object_or_404(File, pk=pk, user=request.user)
+def move_to_trash(request, file_id):
+    file_obj = get_object_or_404(File, id=file_id, user=request.user)
+
     file_obj.is_deleted = True
     file_obj.deleted_at = timezone.now()
-    file_obj.save()
-    messages.warning(request, f"🗑️ '{file_obj.original_name}' moved to Trash.")
-    return redirect('sharing:dashboard')
+    file_obj.save(update_fields=['is_deleted', 'deleted_at'])
+
+    messages.success(request, "🗑 File moved to Trash.")
+    return redirect("sharing:dashboard")
 
 
+# ================================
+# 🗑 Show Trash Page
+# ================================
 @login_required
-def restore_file(request, pk):
-    file_obj = get_object_or_404(File, pk=pk, user=request.user, is_deleted=True)
+def trash_view(request):
+    trashed_files = File.objects.filter(user=request.user, is_deleted=True).order_by('-deleted_at')
+    return render(request, "sharing_app/trash.html", {"trashed_files": trashed_files})
+
+
+# ================================
+# 🔄 Restore file from Trash
+# ================================
+@login_required
+def restore_file(request, file_id):
+    file_obj = get_object_or_404(File, id=file_id, user=request.user)
+
     file_obj.is_deleted = False
     file_obj.deleted_at = None
-    file_obj.save()
-    messages.success(request, f"♻️ '{file_obj.original_name}' restored successfully.")
-    return redirect('sharing:trash')
+    file_obj.save(update_fields=['is_deleted', 'deleted_at'])
+
+    messages.success(request, "♻️ File restored successfully!")
+    return redirect("sharing:trash")
 
 
+# ================================
+# ❌ Permanent Delete
+# ================================
 @login_required
-def delete_permanent(request, pk):
-    file_obj = get_object_or_404(File, pk=pk, user=request.user, is_deleted=True)
-    file_obj.file.delete(save=False)
-    file_obj.delete()
-    messages.success(request, f"❌ '{file_obj.original_name}' deleted permanently.")
-    return redirect('sharing:trash')
+def permanent_delete(request, file_id):
+    file_obj = get_object_or_404(File, id=file_id, user=request.user)
 
+    # Delete physical file
+    try:
+        if file_obj.file and os.path.exists(file_obj.file.path):
+            os.remove(file_obj.file.path)
+    except:
+        pass
+
+    file_obj.delete()
+    messages.success(request, "🗑 File deleted permanently!")
+    return redirect("sharing:trash")
 
 # ==========================================================
 # ⬇️ Download / View Files

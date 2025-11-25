@@ -21,17 +21,22 @@
           <i class="fa-regular fa-file"></i> {{ f.name }}
         </td>
         <td>{{ f.uploaded_at|date:"d M Y, h:i A" }}</td>
+
         <td>
+          <!-- 📥 Download -->
           <a href="{% url 'sharing:download_private' f.pk %}" 
              class="btn-table" title="Download">
             <i class="fa-solid fa-download"></i>
           </a>
-          <a href="{% url 'sharing:delete' f.pk %}" 
-             class="btn-table delete" 
-             title="Move to Trash" 
-             onclick="return confirm('Are you sure you want to move {{ f.name }} to Trash?');">
-            <i class="fa-solid fa-trash"></i>
-          </a>
+
+          <!-- 🗑️ Move to Trash -->
+       <a href="{% url 'sharing:move_to_trash' f.pk %}" 
+        class="btn-table delete" 
+        title="Move to Trash" 
+        onclick="return confirm('Are you sure you want to move {{ f.name }} to Trash?');">
+       <i class="fa-solid fa-trash"></i>
+      </a>
+
         </td>
       </tr>
       {% endfor %}
@@ -59,6 +64,8 @@
   .file-table {
     width: 100%;
     border-collapse: collapse;
+    border-radius: 10px;
+    overflow: hidden;
   }
 
   .file-table th, .file-table td {
@@ -75,7 +82,7 @@
   .btn-table {
     color: #007bff;
     text-decoration: none;
-    margin-right: 8px;
+    margin-right: 10px;
     font-size: 18px;
   }
 

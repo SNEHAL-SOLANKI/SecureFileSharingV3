@@ -14,7 +14,7 @@
   <div class="card shadow-sm mx-auto" style="max-width: 720px;">
     <div class="card-body">
 
-      <form method="POST" enctype="multipart/form-data" class="mb-4">
+      <form id="uploadForm" method="POST" enctype="multipart/form-data" class="mb-4">
         {% csrf_token %}
 
         <!-- Choose file -->
@@ -49,7 +49,7 @@
 
         <!-- Buttons -->
         <div class="d-flex justify-content-end gap-2 mt-3">
-          <button type="submit" class="btn btn-success">
+          <button type="submit" id="uploadBtn" class="btn btn-success">
             <i class="bi bi-upload"></i> Upload
           </button>
           <a href="{% url 'sharing:dashboard' %}" class="btn btn-secondary">
@@ -58,6 +58,13 @@
         </div>
 
       </form>
+
+      <!-- 🔍 Virus Scan Message -->
+      <div id="scanMessage" 
+           class="alert alert-warning text-center mt-3" 
+           style="display:none;">
+        🔄 Scanning your file for viruses… please wait.
+      </div>
 
     </div>
   </div>
@@ -69,15 +76,27 @@ document.addEventListener('DOMContentLoaded', function () {
   const fileInput = document.getElementById('file');
   const displayInput = document.querySelector('input[name="display_name"]');
 
+  // Auto fill display name
   fileInput?.addEventListener('change', function () {
     const f = fileInput.files?.[0];
     if (!f) return;
 
     let file = f.name.split('.');
-    if (file.length > 1) file.pop(); // remove extension
+    if (file.length > 1) file.pop(); 
     let base = file.join('.');
 
     if (!displayInput.value) displayInput.value = base;
+  });
+
+  // Show scanning message after submit
+  const form = document.getElementById("uploadForm");
+  const scanMsg = document.getElementById("scanMessage");
+  const btn = document.getElementById("uploadBtn");
+
+  form.addEventListener("submit", function () {
+    scanMsg.style.display = "block";
+    btn.disabled = true;
+    btn.innerHTML = "Scanning… ⏳";
   });
 });
 </script>

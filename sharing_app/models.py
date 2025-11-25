@@ -1,6 +1,4 @@
 import os
-from tkinter import SEL_FIRST
-from typing import Self
 import uuid
 from django.db import models
 from django.conf import settings
@@ -19,12 +17,12 @@ def user_upload_path(instance, filename):
 
 
 # ==========================================================
-# 📂 Folder Model  (UPDATED with password protection)
+# 📂 Folder Model  (WITH PASSWORD PROTECTION)
 # ==========================================================
 class Folder(models.Model):
     """
     📂 Represents user-created folders.
-    Supports nested folders + password protection.
+    Supports nesting + password protection.
     """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -40,9 +38,7 @@ class Folder(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # ============================
-    # 🔐 NEW FIELDS
-    # ============================
+    # 🔐 Password Features
     password_hash = models.CharField(max_length=128, blank=True, null=True)
     is_protected = models.BooleanField(default=False)
 
@@ -53,38 +49,25 @@ class Folder(models.Model):
     def __str__(self):
         return self.name
 
-    # ============================
     # 🔐 Set Folder Password
-    # ============================
     def set_password(self, raw_password):
-        """
-        Save password for folder.
-        If raw_password empty → remove protection.
-        """
         if raw_password:
             self.password_hash = make_password(raw_password)
             self.is_protected = True
         else:
             self.password_hash = None
             self.is_protected = False
-
         self.save(update_fields=['password_hash', 'is_protected'])
 
-    # ============================
-    # 🔑 Validate Folder Password
-    # ============================
+    # 🔑 Validate Password
     def check_password(self, raw_password):
-        """
-        Validate folder password.
-        If folder not protected → return True.
-        """
         if not self.is_protected or not self.password_hash:
             return True
         return check_password(raw_password, self.password_hash)
 
 
 # ==========================================================
-# 🗂️ File Model
+# 🗂️ MAIN File Model  (Used By Your System)
 # ==========================================================
 class File(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -101,17 +84,37 @@ class File(models.Model):
     name = models.CharField(max_length=512)
     original_name = models.CharField(max_length=512, blank=True, null=True)
 
-    # NEW FIELD
-    display_name = models.CharField(max_length=255, blank=True)   # <-- Add this
+    display_name = models.CharField(max_length=255, blank=True)
 
     uploaded_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Soft Delete Fields
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ['-uploaded_at']
+
+
+# ==========================================================
+# 🗑️ NEW → UploadedFile Model (For Trash Feature)
+# ==========================================================
+class UploadedFile(models.Model):
+    """
+    Simple soft-delete file model you requested.
+    """
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    file = models.FileField(upload_to="uploads/")
+    folder = models.ForeignKey("Folder", on_delete=models.SET_NULL, null=True, blank=True)
+
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.file.name
+
 
 # ==========================================================
 # 🔐 Shared File Model
@@ -143,7 +146,7 @@ class SharedFile(models.Model):
 
     is_public = models.BooleanField(default=False)
 
-    # Encryption flag
+    # Encryption
     is_encrypted = models.BooleanField(default=False)
 
     class Meta:
@@ -156,7 +159,6 @@ class SharedFile(models.Model):
     # 🔒 Encrypt/Decrypt
     # ======================================================
     def encrypt_file(self):
-        """Encrypt stored file using Fernet."""
         file_path = self.file.path
         if not os.path.exists(file_path):
             return False
@@ -176,7 +178,6 @@ class SharedFile(models.Model):
         return True
 
     def decrypt_file(self):
-        """Return decrypted file bytes."""
         file_path = self.file.path
         if not os.path.exists(file_path):
             return None
@@ -195,18 +196,15 @@ class SharedFile(models.Model):
     # 🕒 Temporary Link
     # ======================================================
     def generate_temp_link(self):
-        """Generate 10-minute temporary share token."""
         self.shared_token = uuid.uuid4().hex
         self.shared_expiry = timezone.now() + timezone.timedelta(minutes=10)
         self.save(update_fields=['shared_token', 'shared_expiry'])
         return self.shared_token
 
     def is_link_valid(self):
-        """Check whether token is still valid."""
         return bool(self.shared_expiry and timezone.now() < self.shared_expiry)
 
     def get_share_url(self, request):
-        """Return public share URL."""
         from django.urls import reverse
         share_path = reverse('sharing:download_public', args=[self.share_key])
         return request.build_absolute_uri(share_path)

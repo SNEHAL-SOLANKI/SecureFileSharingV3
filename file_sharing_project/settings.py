@@ -4,6 +4,9 @@ from cryptography.fernet import Fernet
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+FERNET_KEY = os.environ.get("FERNET_KEY")
+
+
 
 PROJECT_TITLE = "Secure File Sharing System"
 PROJECT_SUBTITLE = "Share your files securely and easily"
